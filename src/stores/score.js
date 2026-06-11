@@ -115,10 +115,30 @@ export const useScoreStore = defineStore('score', () => {
     const monthlyScores = getMonthlyScores(guideId)
     if (monthlyScores.length === 0) return 0
     
+    const monthMap = {}
+    monthlyScores.forEach(ms => {
+      monthMap[ms.month] = ms.avgScore
+    })
+    
+    const getPrevMonth = (monthStr) => {
+      const [y, m] = monthStr.split('-').map(Number)
+      const date = new Date(y, m - 2, 1)
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    }
+    
     let consecutive = 0
-    for (let i = monthlyScores.length - 1; i >= 0; i--) {
-      if (monthlyScores[i].avgScore < WARNING_SCORE) {
+    let currentMonth = monthlyScores[monthlyScores.length - 1].month
+    
+    while (true) {
+      const avg = monthMap[currentMonth]
+      
+      if (avg === undefined) {
+        break
+      }
+      
+      if (avg < WARNING_SCORE) {
         consecutive++
+        currentMonth = getPrevMonth(currentMonth)
       } else {
         break
       }
